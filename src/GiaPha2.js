@@ -388,22 +388,22 @@ function GiaPha2() {
     <div>
       <ul id="contextMenu" className="menu">
         <li id="cut" className="menu-item">
-          <Button id="add-children" variant="primary" onClick={handleShow}>
+          <Button id="add-children" variant="primary" className="btn form-control" onClick={handleShow}>
             Thêm Người Con
           </Button>
         </li>
         <li id="copy" className="menu-item">
-          <Button id="add-marriage" variant="primary" onClick={handleShow}>
+          <Button id="add-marriage" variant="primary" className="btn form-control" onClick={handleShow}>
             Thêm Vợ/Chồng
           </Button>
         </li>
         <li id="paste" className="menu-item">
-          <Button id="add-marriage" variant="primary" onClick={handleShow}>
+          <Button id="add-marriage" variant="primary" className="btn form-control" onClick={handleShow}>
             Thêm Cha/Mẹ
           </Button>
         </li>
         <li id="delete" className="menu-item">
-          <Button id="add-marriage" variant="primary" onClick={handleShow}>
+          <Button id="add-marriage" variant="primary" className="btn form-control" onClick={handleShow}>
             Xem/Sửa/Xóa
           </Button>
         </li>
