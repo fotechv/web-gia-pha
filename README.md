@@ -1,4 +1,5 @@
 # web-gia-pha-js
+Code base trên GoJS https://gojs.net/latest/samples/genogram.html
 
 CÓ các chức năng cơ bản:
 - Không giới hạn node phả hệ
