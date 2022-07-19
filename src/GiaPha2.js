@@ -176,6 +176,17 @@ function initDiagram() {
       go.Node,
       "Vertical",
       { contextMenu: myContextMenu }, //KHAI BÁO Context MENU cho Node Nam
+      // {
+      //   contextMenu: $(go.Adornment, "Vertical", new go.Binding("itemArray", "commands"), {
+      //     itemTemplate: $("ContextMenuButton", $(go.TextBlock, new go.Binding("text")), {
+      //       click: function (e, button) {
+      //         var cmd = button.data;
+      //         var nodedata = button.part.adornedPart.data;
+      //         console.log("On " + nodedata.text + "  " + cmd.text + ": " + cmd.action);
+      //       },
+      //     }),
+      //   }),
+      // },
       { locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON" },
       new go.Binding("opacity", "hide", (h) => (h ? 0 : 1)),
       new go.Binding("pickable", "hide", (h) => !h),
@@ -317,6 +328,8 @@ function initDiagram() {
 
   function showContextMenu(obj, diagram, tool) {
     // Show only the relevant buttons given the current state.
+    console.log("Data của node", obj.qb);
+    // console.log("tool", tool);
     var cmd = diagram.commandHandler;
     var hasMenuItem = false;
     // function maybeShowItem(elt, pred) {
