@@ -309,7 +309,7 @@ function initDiagram() {
       { key: -51, n: "Bảo Nguyễn", s: "M", a: ["B", "H", "S"] },
       // Thêm mới
       // Chỉ Bố hoặc Mẹ thì không hiện thị được liên kết
-      { key: -52, n: "Test vợ1", s: "F", a: ["B"] },
+      { key: -52, n: "Test vợ1", s: "M", ux: 10, a: ["B", "S"] },
     ],
     4 /* focus on this person */
   );
@@ -413,17 +413,30 @@ function GiaPha2() {
       ...
       <Modal show={show} onHide={handleClose}>
         <Modal.Header closeButton>
-          <Modal.Title>Modal heading</Modal.Title>
+          <Modal.Title>THÔNG TIN CÁ NHÂN</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
             <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
-              <Form.Label>Email address</Form.Label>
-              <Form.Control type="email" placeholder="name@example.com" autoFocus />
+              <Form.Label>Thông ti của node: </Form.Label>
+              <Form.Label>NGUYỄN VĂN A</Form.Label>
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="exampleForm.ControlInput2">
+              <Form.Label>Họ và tên</Form.Label>
+              <Form.Control type="text" autoFocus />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="exampleForm.ControlInput3">
+              <Form.Check inline label="Còn sống" name="group1" type="radio" id="id1" />
+              <Form.Check inline label="Đã chết" name="group1" type="radio" id="id2" />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="formBasicCheckbox">
+              <Form.Check type="checkbox" label="A" />
+              <Form.Check type="checkbox" label="B" />
+              <Form.Check type="checkbox" label="C" />
             </Form.Group>
             <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
-              <Form.Label>Example textarea</Form.Label>
-              <Form.Control as="textarea" rows={3} />
+              <Form.Label>Mô tả</Form.Label>
+              <Form.Control as="textarea" rows={6} />
             </Form.Group>
           </Form>
         </Modal.Body>
