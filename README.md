@@ -1,6 +1,8 @@
 # web-gia-pha-js
+Code base trên GoJS https://gojs.net/latest/samples/genogram.html
 
-Mong muốn convert code js sang ReactJS. Code demo lấy tại trang https://gojs.net/latest/samples/genogram.html
-
-Hiện tại:
-Code đang chạy dưới dạng file js static, được add src trong file ./public/index.html (line 30->40)
+CÓ các chức năng cơ bản:
+- Không giới hạn node phả hệ
+- Thêm con (Bắt buộc đã có đầy đủ data của Vợ/Chồng). Con chỉ có duy nhất 1 bố và 1 mẹ.
+- Thêm Vợ hoặc Chồng. Vợ/Chồng có thể có nhiều Chồng/Vợ
+- Xem/Sửa/Xóa từng người
