@@ -1,5 +1,5 @@
 // File này là chạy code convert từ file genogramCode.js sang ReactJS
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { ReactDiagram } from "gojs-react";
 
 import * as go from "gojs";
@@ -14,6 +14,8 @@ import setupDiagram from "./components/GenogramLibs";
 import "./App.css"; // contains .diagram-component CSS
 
 var counterLoad = 0;
+var data2;
+
 /**
  * Khởi tạo Diagram
  */
@@ -328,11 +330,9 @@ function initDiagram() {
 
   function showContextMenu(obj, diagram, tool) {
     // Show only the relevant buttons given the current state.
-    console.log("Data của node", obj.qb);
     // console.log("tool", tool);
     var cmd = diagram.commandHandler;
     var hasMenuItem = false;
-    // function maybeShowItem(elt, pred) {
     function maybeShowItem(elt, pred) {
       if (pred === 1) {
         elt.style.display = "block";
@@ -342,9 +342,9 @@ function initDiagram() {
       }
     }
     maybeShowItem(document.getElementById("cut"), 1);
-    maybeShowItem(document.getElementById("copy"), 1);
-    maybeShowItem(document.getElementById("paste"), 1);
-    maybeShowItem(document.getElementById("delete"), 1);
+    // maybeShowItem(document.getElementById("copy"), 1);
+    // maybeShowItem(document.getElementById("paste"), 1);
+    // maybeShowItem(document.getElementById("delete"), 1);
 
     // Now show the whole context menu element
     if (hasMenuItem) {
@@ -354,6 +354,36 @@ function initDiagram() {
       cxElement.style.left = mousePt.x + 5 + "px";
       cxElement.style.top = mousePt.y + "px";
     }
+
+    // Gán giá trị vào thuộc tính của Button
+    // console.log("Data của node", obj.data);
+    const dataObj = document.getElementById("add-children");
+    dataObj.setAttribute("data-key", obj.data.key);
+    dataObj.setAttribute("data-name", obj.data.n);
+    dataObj.setAttribute("data-sex", obj.data.s);
+    dataObj.setAttribute("data-mother", obj.data.m);
+    dataObj.setAttribute("data-father", obj.data.f);
+    dataObj.setAttribute("data-wife", obj.data.ux);
+    dataObj.setAttribute("data-husband", obj.data.vir);
+    dataObj.setAttribute("data-attributes", obj.data.a);
+
+    var getData = [];
+    getData["key"] = obj.data.key;
+    getData["n"] = obj.data.n;
+    getData["s"] = obj.data.s;
+    getData["m"] = obj.data.m;
+    getData["f"] = obj.data.f;
+    getData["ux"] = obj.data.ux;
+    getData["vir"] = obj.data.vir;
+    getData["a"] = obj.data.a;
+    getData["description"] = obj.data.description;
+
+    data2 = getData;
+
+    console.log("dataObj", dataObj);
+    if (data2 === null) {
+      console.log("Khong có data2");
+    } else console.log("data2", data2);
   }
 
   function hideContextMenu() {
@@ -379,20 +409,45 @@ function handleOnClick() {
 
 // render function...
 function GiaPha2() {
+  // Cách 1 lấy value sử dụng useRef (add vào attribute button ref={ref})
+  // const ref = useRef(null);
+
+  const [data, setData] = useState(false);
   const [show, setShow] = useState(false);
 
   const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
+  const handleShow = (event) => {
+    // console.log("ref.current.data-name", ref.current);
+
+    // console.log("event dataset", event.target.dataset);
+    // console.log("data-name", event.target.attributes.getNamedItem("data-name").value);
+    var getData = [];
+    getData["key"] = event.target.attributes.getNamedItem("data-key").value;
+    getData["n"] = event.target.attributes.getNamedItem("data-name").value;
+    getData["s"] = event.target.attributes.getNamedItem("data-sex").value;
+    getData["m"] = event.target.attributes.getNamedItem("data-mother").value;
+    getData["f"] = event.target.attributes.getNamedItem("data-father").value;
+    getData["ux"] = event.target.attributes.getNamedItem("data-wife").value;
+    getData["vir"] = event.target.attributes.getNamedItem("data-husband").value;
+    getData["a"] = event.target.attributes.getNamedItem("data-attributes").value;
+
+    setData(getData);
+
+    console.log("data", getData);
+    console.log("data2 button", data2);
+
+    setShow(true);
+  };
 
   return (
     <div>
       <ul id="contextMenu" className="menu">
         <li id="cut" className="menu-item">
-          <Button id="add-children" variant="primary" className="btn form-control" onClick={handleShow}>
+          <Button id="add-children" variant="primary" data-key="key1" data-name="name1" className="btn form-control" onClick={handleShow}>
             Thêm Người Con
           </Button>
         </li>
-        <li id="copy" className="menu-item">
+        {/* <li id="copy" className="menu-item">
           <Button id="add-marriage" variant="primary" className="btn form-control" onClick={handleShow}>
             Thêm Vợ/Chồng
           </Button>
@@ -406,7 +461,7 @@ function GiaPha2() {
           <Button id="add-marriage" variant="primary" className="btn form-control" onClick={handleShow}>
             Xem/Sửa/Xóa
           </Button>
-        </li>
+        </li> */}
       </ul>
       ...
       <ReactDiagram initDiagram={initDiagram} divClassName="diagram-component diagram-center" onModelChange={handleModelChange} />
@@ -419,14 +474,13 @@ function GiaPha2() {
           <Form>
             <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
               <Form.Label>Thông ti của node: </Form.Label>
-              <Form.Label>NGUYỄN VĂN A</Form.Label>
+              <Form.Label>{data["n"]}</Form.Label>
             </Form.Group>
             <Form.Group className="mb-3" controlId="exampleForm.ControlInput2">
               <Form.Label>Họ và tên</Form.Label>
               <Form.Control type="text" autoFocus />
             </Form.Group>
             <Form.Group className="mb-3" controlId="exampleForm.ControlInput3">
-              <Form.Check inline label="Còn sống" name="group1" type="radio" id="id1" />
               <Form.Check inline label="Đã chết" name="group1" type="radio" id="id2" />
             </Form.Group>
             <Form.Group className="mb-3" controlId="formBasicCheckbox">
