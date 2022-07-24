@@ -1,354 +1,28 @@
 // File này là chạy code convert từ file genogramCode.js sang ReactJS
-import React, { useRef, useState } from "react";
+import "./App.css"; // contains .diagram-component CSS
+import React, { useRef, useState, useEffect } from "react";
 import { ReactDiagram } from "gojs-react";
 
 import * as go from "gojs";
 
-import Button from "react-bootstrap/Button";
+import { useForm } from "react-hook-form";
 import Form from "react-bootstrap/Form";
+import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
+import FloatingLabel from "react-bootstrap/FloatingLabel";
+import Col from "react-bootstrap/Col";
+import Row from "react-bootstrap/Row";
 
 import GenogramLayout from "./components/GenogramLayout";
 import setupDiagram from "./components/GenogramLibs";
+
+import { doc, collection, query, orderBy, limit, onSnapshot, getDocs, addDoc, setDoc, updateDoc, deleteDoc, getFirestore } from "firebase/firestore";
+import { db } from "./database/firebaseConfig";
 import { listNodeArray } from "./database/firestoreDao";
 
-import "./App.css"; // contains .diagram-component CSS
-
-var counterLoad = 0;
-var data2;
-
-/**
- * Khởi tạo Diagram
- */
-function initDiagram() {
-  counterLoad += 1;
-  // Since 2.2 you can also author concise templates with method chaining instead of GraphObject.make
-  // For details, see https://gojs.net/latest/intro/buildingObjects.html
-  const $ = go.GraphObject.make;
-
-  const myDiagram = $(go.Diagram, {
-    initialAutoScale: go.Diagram.Uniform,
-    "undoManager.isEnabled": true,
-    // when a node is selected, draw a big yellow circle behind it
-    nodeSelectionAdornmentTemplate: $(
-      go.Adornment,
-      "Auto",
-      { layerName: "Grid" }, // the predefined layer that is behind everything else
-      $(go.Shape, "Circle", { fill: "#c1cee3", stroke: null }),
-      $(go.Placeholder, { margin: 2 })
-    ),
-    // use a custom layout, defined below
-    layout: $(GenogramLayout, { direction: 90, layerSpacing: 30, columnSpacing: 10 }),
-  });
-
-  // Khai báo menu
-  var cxElement = document.getElementById("contextMenu");
-  const current = new Date();
-  console.log("page load", counterLoad, current);
-  console.log("cxElement", cxElement);
-
-  // an HTMLInfo object is needed to invoke the code to set up the HTML cxElement
-  var myContextMenu = $(go.HTMLInfo, {
-    show: showContextMenu,
-    hide: hideContextMenu,
-  });
-  // END Khai báo menu
-
-  // determine the color for each attribute shape
-  function attrFill(a) {
-    switch (a) {
-      case "A":
-        return "#00af54"; // green
-      case "B":
-        return "#f27935"; // orange
-      case "C":
-        return "#d4071c"; // red
-      case "D":
-        return "#70bdc2"; // cyan
-      case "E":
-        return "#fcf384"; // gold
-      case "F":
-        return "#e69aaf"; // pink
-      case "G":
-        return "#08488f"; // blue
-      case "H":
-        return "#866310"; // brown
-      case "I":
-        return "#9270c2"; // purple
-      case "J":
-        return "#a3cf62"; // chartreuse
-      case "K":
-        return "#91a4c2"; // lightgray bluish
-      case "L":
-        return "#af70c2"; // magenta
-      case "S":
-        return "#d4071c"; // red
-      default:
-        return "transparent";
-    }
-  }
-
-  // determine the geometry for each attribute shape in a male;
-  // except for the slash these are all squares at each of the four corners of the overall square
-  const tlsq = go.Geometry.parse("F M1 1 l19 0 0 19 -19 0z");
-  const trsq = go.Geometry.parse("F M20 1 l19 0 0 19 -19 0z");
-  const brsq = go.Geometry.parse("F M20 20 l19 0 0 19 -19 0z");
-  const blsq = go.Geometry.parse("F M1 20 l19 0 0 19 -19 0z");
-  const slash = go.Geometry.parse("F M38 0 L40 0 40 2 2 40 0 40 0 38z");
-  function maleGeometry(a) {
-    switch (a) {
-      case "A":
-        return tlsq;
-      case "B":
-        return tlsq;
-      case "C":
-        return tlsq;
-      case "D":
-        return trsq;
-      case "E":
-        return trsq;
-      case "F":
-        return trsq;
-      case "G":
-        return brsq;
-      case "H":
-        return brsq;
-      case "I":
-        return brsq;
-      case "J":
-        return blsq;
-      case "K":
-        return blsq;
-      case "L":
-        return blsq;
-      case "S":
-        return slash;
-      default:
-        return tlsq;
-    }
-  }
-
-  // determine the geometry for each attribute shape in a female;
-  // except for the slash these are all pie shapes at each of the four quadrants of the overall circle
-  // xác định hình dạng cho từng hình dạng thuộc tính trong một cái;
-  // ngoại trừ dấu gạch chéo, tất cả đều là hình bánh ở mỗi trong bốn góc phần tư của hình tròn tổng thể
-  const tlarc = go.Geometry.parse("F M20 20 B 180 90 20 20 19 19 z");
-  const trarc = go.Geometry.parse("F M20 20 B 270 90 20 20 19 19 z");
-  const brarc = go.Geometry.parse("F M20 20 B 0 90 20 20 19 19 z");
-  const blarc = go.Geometry.parse("F M20 20 B 90 90 20 20 19 19 z");
-  function femaleGeometry(a) {
-    switch (a) {
-      case "A":
-        return tlarc;
-      case "B":
-        return tlarc;
-      case "C":
-        return tlarc;
-      case "D":
-        return trarc;
-      case "E":
-        return trarc;
-      case "F":
-        return trarc;
-      case "G":
-        return brarc;
-      case "H":
-        return brarc;
-      case "I":
-        return brarc;
-      case "J":
-        return blarc;
-      case "K":
-        return blarc;
-      case "L":
-        return blarc;
-      case "S":
-        return slash;
-      default:
-        return tlarc;
-    }
-  }
-
-  // two different node templates, one for each sex,
-  // named by the category value in the node data object
-  // hai mẫu nút khác nhau, một mẫu cho mỗi giới tính,
-  // được đặt tên theo giá trị danh mục trong đối tượng dữ liệu nút
-  myDiagram.nodeTemplateMap.add(
-    "M", // male
-    $(
-      go.Node,
-      "Vertical",
-      { contextMenu: myContextMenu }, //KHAI BÁO Context MENU cho Node Nam
-      // {
-      //   contextMenu: $(go.Adornment, "Vertical", new go.Binding("itemArray", "commands"), {
-      //     itemTemplate: $("ContextMenuButton", $(go.TextBlock, new go.Binding("text")), {
-      //       click: function (e, button) {
-      //         var cmd = button.data;
-      //         var nodedata = button.part.adornedPart.data;
-      //         console.log("On " + nodedata.text + "  " + cmd.text + ": " + cmd.action);
-      //       },
-      //     }),
-      //   }),
-      // },
-      { locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON" },
-      new go.Binding("opacity", "hide", (h) => (h ? 0 : 1)),
-      new go.Binding("pickable", "hide", (h) => !h),
-      $(
-        go.Panel,
-        { name: "ICON" },
-        $(go.Shape, "Square", { width: 40, height: 40, strokeWidth: 2, fill: "white", stroke: "#919191", portId: "" }),
-        $(
-          go.Panel,
-          {
-            // for each attribute show a Shape at a particular place in the overall square
-            itemTemplate: $(go.Panel, $(go.Shape, { stroke: null, strokeWidth: 0 }, new go.Binding("fill", "", attrFill), new go.Binding("geometry", "", maleGeometry))),
-            margin: 1,
-          },
-          new go.Binding("itemArray", "a")
-        )
-      ),
-      $(go.TextBlock, { textAlign: "center", maxSize: new go.Size(80, NaN), background: "rgba(255,255,255,0.5)" }, new go.Binding("text", "n"))
-    )
-  );
-
-  myDiagram.nodeTemplateMap.add(
-    "F", // female
-    $(
-      go.Node,
-      "Vertical",
-      { contextMenu: myContextMenu }, //KHAI BÁO Context MENU cho Node NỮ
-      { locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON" },
-      new go.Binding("opacity", "hide", (h) => (h ? 0 : 1)),
-      new go.Binding("pickable", "hide", (h) => !h),
-      $(
-        go.Panel,
-        { name: "ICON" },
-        $(go.Shape, "Circle", { width: 40, height: 40, strokeWidth: 2, fill: "white", stroke: "#a1a1a1", portId: "" }),
-        $(
-          go.Panel,
-          {
-            // for each attribute show a Shape at a particular place in the overall circle
-            itemTemplate: $(go.Panel, $(go.Shape, { stroke: null, strokeWidth: 0 }, new go.Binding("fill", "", attrFill), new go.Binding("geometry", "", femaleGeometry))),
-            margin: 1,
-          },
-          new go.Binding("itemArray", "a")
-        )
-      ),
-      $(go.TextBlock, { textAlign: "center", maxSize: new go.Size(80, NaN), background: "rgba(255,255,255,0.5)" }, new go.Binding("text", "n"))
-    )
-  );
-
-  // the representation of each label node -- nothing shows on a Marriage Link
-  myDiagram.nodeTemplateMap.add("LinkLabel", $(go.Node, { selectable: false, width: 1, height: 1, fromEndSegmentLength: 20 }));
-
-  myDiagram.linkTemplate = // for parent-child relationships
-    $(
-      go.Link,
-      {
-        routing: go.Link.Orthogonal,
-        corner: 5,
-        layerName: "Background",
-        selectable: false,
-      },
-      $(go.Shape, { stroke: "#424242", strokeWidth: 2 })
-    );
-
-  myDiagram.linkTemplateMap.add(
-    "Marriage", // for marriage relationships
-    $(go.Link, { selectable: false, layerName: "Background" }, $(go.Shape, { strokeWidth: 2.5, stroke: "#5d8cc1" /* blue */ }))
-  );
-
-  // n: name, s: sex, m: mother, f: father, ux: wife, vir: husband, a: attributes/markers
-  // a: an Array of the attributes or markers that the person has
-  // a: một Mảng gồm các thuộc tính hoặc điểm đánh dấu mà người đó có
-  console.log(listNodeArray);
-  setupDiagram(myDiagram, listNodeArray, 4 /* focus on this person */);
-
-  myDiagram.contextMenu = myContextMenu;
-
-  // We don't want the div acting as a context menu to have a (browser) context menu!
-  cxElement.addEventListener(
-    "contextmenu",
-    (e) => {
-      e.preventDefault();
-      return false;
-    },
-    false
-  );
-
-  function showContextMenu(obj, diagram, tool) {
-    // Show only the relevant buttons given the current state.
-    // console.log("tool", tool);
-    var cmd = diagram.commandHandler;
-    var hasMenuItem = false;
-    function maybeShowItem(elt, pred) {
-      if (pred === 1) {
-        elt.style.display = "block";
-        hasMenuItem = true;
-      } else {
-        elt.style.display = "none";
-      }
-    }
-    maybeShowItem(document.getElementById("cut"), 1);
-    maybeShowItem(document.getElementById("copy"), 1);
-    maybeShowItem(document.getElementById("paste"), 1);
-    maybeShowItem(document.getElementById("delete"), 1);
-
-    // Now show the whole context menu element
-    if (hasMenuItem) {
-      cxElement.classList.add("show-menu");
-      // we don't bother overriding positionContextMenu, we just do it here:
-      var mousePt = diagram.lastInput.viewPoint;
-      cxElement.style.left = mousePt.x + 5 + "px";
-      cxElement.style.top = mousePt.y + "px";
-    }
-
-    // Gán giá trị vào thuộc tính của Button
-    // console.log("Data của node", obj.data);
-    const dataObj = document.getElementById("add-children");
-    dataObj.setAttribute("data-key", obj.data.key);
-    dataObj.setAttribute("data-name", obj.data.n);
-    dataObj.setAttribute("data-sex", obj.data.s);
-    dataObj.setAttribute("data-mother", obj.data.m);
-    dataObj.setAttribute("data-father", obj.data.f);
-    dataObj.setAttribute("data-wife", obj.data.ux);
-    dataObj.setAttribute("data-husband", obj.data.vir);
-    dataObj.setAttribute("data-attributes", obj.data.a);
-
-    var getData = [];
-    getData["key"] = obj.data.key;
-    getData["n"] = obj.data.n;
-    getData["s"] = obj.data.s;
-    getData["m"] = obj.data.m;
-    getData["f"] = obj.data.f;
-    getData["ux"] = obj.data.ux;
-    getData["vir"] = obj.data.vir;
-    getData["a"] = obj.data.a;
-    getData["description"] = obj.data.description;
-
-    data2 = getData;
-
-    console.log("dataObj", dataObj);
-    if (data2 === null) {
-      console.log("Khong có data2");
-    } else console.log("data2", data2);
-  }
-
-  function hideContextMenu() {
-    cxElement.classList.remove("show-menu");
-  }
-
-  return myDiagram;
-}
-
-/**
- * This function handles any changes to the GoJS model.
- * It is here that you would make any updates to your React state, which is dicussed below.
- */
-function handleModelChange(changes) {
-  // alert("GoJS model changed!");
-  console.log("GoJS model changed!");
-}
+import Diagram from "./components/diagram/diagram";
+import store from "./store";
+import ModalAddSon from "./components/ModalAddSon";
 
 function handleOnClick() {
   // alert("Alo");
@@ -359,97 +33,340 @@ function handleOnClick() {
 function GiaPha2() {
   // Cách 1 lấy value sử dụng useRef (add vào attribute button ref={ref})
   // const ref = useRef(null);
-  const [data, setData] = useState(false);
+  const [newId, setNewId] = useState(); //Xác định ID mới nhất để tạo key cho người thêm mới
   const [show, setShow] = useState(false);
+  const [data, setData] = useState({}); //Lưu data khi right click vào người nào đó
+  const [getDataFireStore, setGetDataFireStore] = useState([]);
+  const listNodeData = store((state) => state.listNodeData);
+  const changeListNodeData = store((state) => state.changeListNodeData);
+  const usersCollection = collection(db, "biography");
+
+  const onSubmit = (data1) => console.log("GiaPha2.data1", data1);
+
+  useEffect(() => {
+    const getUsers = async () => {
+      const data = await getDocs(usersCollection);
+      setGetDataFireStore(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+    };
+
+    getUsers();
+  }, []);
+
+  useEffect(() => {
+    changeListNodeData({ listNodeData: getDataFireStore });
+  });
+
+  // // THAM KHẢO DANH SÁCH TASKS
+  // useEffect(() => {
+  //   const colTasks = collection(db, "tele_bot_tasks");
+  //   const q = query(colTasks, orderBy("runAt", "desc"));
+
+  //   const unsub = onSnapshot(q, (querySnapshot) => {
+  //     let taskArray = [];
+
+  //     querySnapshot.forEach((doc) => {
+  //       let docData = doc.data();
+
+  //       taskArray.push({
+  //         ...docData,
+  //         id: doc.id,
+  //       });
+  //     });
+
+  //     setTasks(taskArray);
+  //   });
+
+  //   return () => unsub();
+  // }, []);
+
+  useEffect(() => {
+    const col = collection(db, "biography");
+    // const q = query(col);
+    const q = query(col, orderBy("createdAt", "desc"), limit(1));
+    onSnapshot(q, (querySnapshot) => {
+      // setNewId(querySnapshot.size + 1);
+
+      querySnapshot.forEach((doc) => {
+        setNewId(parseInt(doc.id) + 1);
+        // console.log(doc.id, " => ", doc.data());
+        // console.log(doc.id, " => ", doc.data().key);
+      });
+    });
+
+    // console.log("newId", newId);
+  });
+
+  const createNode = async (node) => {
+    // const col = collection(db, "biography");
+    // const r = await addDoc(col, { ...node });
+
+    // // Add a new document with a generated id
+    // const docRef = doc(collection(db, "biography"));
+    // await setDoc(docRef, node);
+    // console.log("Document written with ID: ", docRef.id);
+
+    const docId = String(node.key);
+    const docRef = doc(db, "biography", docId);
+    await setDoc(docRef, node)
+      .then(() => {
+        console.log("Tạo CON thành công", docRef.id);
+      })
+      .catch((error) => {
+        console.log("setDoc.error", error);
+      });
+  };
+
+  const createNodeWifeHusband = async (node, getData) => {
+    const docId = String(node.key);
+    const docRef = doc(db, "biography", docId);
+    await setDoc(docRef, node)
+      .then(() => {
+        console.log("Tạo Vợ/Chồng thành công", docRef.id);
+      })
+      .catch((error) => {
+        console.log("setDoc.error", error);
+      });
+
+    // console.log("createNodeWifeHusband.data", data); //Không hiểu sao data state ở đây không có gì
+    // console.log("createNodeWifeHusband.getData", getData); //Phải dùng getData truyền thì hàm handleShow
+    // console.log("docNewId", docRef.id);
+    if (getData.s === "M") {
+      // Kiểm tra xem Chồng đã có vợ nào được gán chưa
+      if (getData.ux) {
+        //Nếu đã có vợ, không update lại thông tin chồng
+      } else {
+        // Chưa có vợ => Update lại ux
+        const currentNode = doc(db, "biography", getData.key);
+        await updateDoc(currentNode, {
+          a: ["L"],
+          ux: docRef.id,
+        })
+          .then(() => {
+            console.log("Cập nhật ux thành công", getData.key);
+          })
+          .catch((error) => {
+            console.log("setDoc.error", error);
+          });
+      }
+    } else if (getData.s === "F") {
+      // Kiểm tra xem Vợ đã có chồng nào chưa
+      if (getData.vir) {
+        //Nếu đã có, không update lại thông tin vợ
+      } else {
+        // Chưa có Chồng => Update lại vir
+        const currentNode = doc(db, "biography", getData.key);
+        await updateDoc(currentNode, {
+          a: ["L"],
+          vir: docRef.id,
+        })
+          .then(() => {
+            console.log("Cập nhật vir thành công", getData.key);
+          })
+          .catch((error) => {
+            console.log("setDoc.error", error);
+          });
+      }
+    }
+  };
+
+  const createNodeParents = async (nodeBo, nodeMe, getData) => {
+    // Tạo BỐ
+    const docBoId = String(nodeBo.key);
+    const docRef1 = doc(db, "biography", docBoId);
+    await setDoc(docRef1, nodeBo)
+      .then(() => {
+        console.log("Tạo Bố thành công", docRef1.id);
+      })
+      .catch((error) => {
+        console.log("setDoc.error", error);
+      });
+
+    // Tạo MẸ
+    const docMeId = String(nodeMe.key);
+    const docRef2 = doc(db, "biography", docMeId);
+    await setDoc(docRef2, nodeMe)
+      .then(() => {
+        console.log("Tạo Mẹ thành công", docRef2.id);
+      })
+      .catch((error) => {
+        console.log("setDoc.error", error);
+      });
+
+    //CẬP NHẬT LẠI THÔNG TIN BỐ MẸ CHO NODE HIỆN TẠI
+    const currentNode = doc(db, "biography", getData.key);
+    await updateDoc(currentNode, {
+      f: docRef1.id,
+      m: docRef2.id,
+    }).then(() => {
+      console.log("Cập nhật f,m thành công cho node", getData.key);
+    });
+  };
 
   const handleClose = () => setShow(false);
   const handleShow = (event) => {
+    console.log("newId", newId);
     // console.log("ref.current.data-name", ref.current);
 
     // console.log("event dataset", event.target.dataset);
     // console.log("data-name", event.target.attributes.getNamedItem("data-name").value);
-    var getData = [];
-    getData["key"] = event.target.attributes.getNamedItem("data-key").value;
-    getData["n"] = event.target.attributes.getNamedItem("data-name").value;
-    getData["s"] = event.target.attributes.getNamedItem("data-sex").value;
-    getData["m"] = event.target.attributes.getNamedItem("data-mother").value;
-    getData["f"] = event.target.attributes.getNamedItem("data-father").value;
-    getData["ux"] = event.target.attributes.getNamedItem("data-wife").value;
-    getData["vir"] = event.target.attributes.getNamedItem("data-husband").value;
-    getData["a"] = event.target.attributes.getNamedItem("data-attributes").value;
-
+    var getData = {};
+    getData.key = event.target.attributes.getNamedItem("data-key").value;
+    getData.n = event.target.attributes.getNamedItem("data-name").value;
+    getData.s = event.target.attributes.getNamedItem("data-sex").value;
+    getData.f = event.target.attributes.getNamedItem("data-mother").value;
+    getData.m = event.target.attributes.getNamedItem("data-father").value;
+    getData.ux = event.target.attributes.getNamedItem("data-wife").value;
+    getData.vir = event.target.attributes.getNamedItem("data-husband").value;
+    getData.a = event.target.attributes.getNamedItem("data-attributes").value;
+    getData.bio = event.target.attributes.getNamedItem("data-attributes").value;
     setData(getData);
+    // console.log("handleShow.data", data);//Không hiểu sao lúc được lúc không
+    // console.log("handleShow.getData", getData);
 
-    console.log("data", getData);
-    console.log("data2 button", data2);
+    const dataType = event.target.attributes.getNamedItem("data-type").value;
+    // console.log("Giá trị button", dataType);
 
-    setShow(true);
+    // var node = [];
+    var node = {};
+    node.key = newId;
+    node.n = "Chưa xác định";
+    node.s = "";
+    node.f = "";
+    node.m = "";
+    node.ux = "";
+    node.vir = "";
+    node.a = []; // Là array
+    node.bio = "";
+    node.createdAt = new Date();
+    // THÊM CON
+    // 1. Nếu s=M (là Bố)
+    // - Check có vợ chưa (ux có giá trị)? Nếu có, tạo con, nếu không đưa ra thông báo cần thêm chồng
+    if (dataType === "1") {
+      // THÊM CON TRAI
+      node.s = "M"; //sex=Male
+      if (getData.s === "M") {
+        // Người chọn là BỐ
+        node.f = getData.key;
+        if (getData.ux) {
+          node.m = getData.ux; //lấy giá trị m(Mẹ) là ux(vợ) của Bố
+        } else {
+          // Đưa ra thông báo cần thêm chồng
+          // Case này không cần handle, vì không có chồng/vợ, menu này không hiện
+        }
+      } else if (getData.s === "F") {
+        // Người chọn là MẸ
+        node.m = getData.key;
+        if (getData.vir) {
+          node.f = getData.vir; //lấy giá trị f(Bố) là vir(chồng) của mẹ
+        } else {
+          // Đưa ra thông báo cần thêm chồng
+          // Case này không cần handle, vì không có chồng/vợ, menu này không hiện
+        }
+      }
+
+      node.n = node.key;
+      createNode(node);
+    } else if (dataType === "2") {
+      //THÊM CON GÁI
+      node.s = "F"; //sex = Female
+      if (getData.s === "M") {
+        // Người chọn là BỐ
+        node.f = getData.key;
+        if (getData.ux) {
+          node.m = getData.ux; //lấy giá trị m(Mẹ) là ux(vợ) của Bố
+        }
+      } else if (getData.s === "F") {
+        // Người chọn là MẸ
+        node.m = getData.key;
+        if (getData.vir) {
+          node.f = getData.vir; //lấy giá trị f(Bố) là vir(chồng) của mẹ
+        }
+      }
+
+      node.n = node.key;
+      createNode(node);
+    } else if (dataType === "3") {
+      // THÊM VỢ/CHỒNG
+      if (getData.s === "M") {
+        // Thêm vợ ==> Node đang chọn là Male
+        node.s = "F";
+        node.a = ["L"]; // Đánh dấu là vợ
+        node.vir = getData.key; //key của Chồng
+      } else if (getData.s === "F") {
+        // Thêm chồng ==> Node đang chọn là Female
+        node.s = "M";
+        node.a = ["L"]; // Đánh dấu là chồng
+        node.ux = getData.key;
+      }
+
+      node.n = node.key; //Tạm lưu tên là key cho dễ dev
+      createNodeWifeHusband(node, getData);
+    } else if (dataType === "4") {
+      // THÊM BỐ/MẸ => Thêm đồng thời 2 node
+      // node BỐ
+      node.s = "M";
+      node.a = ["L"];
+      node.ux = node.key + 1;
+
+      // Node MẸ
+      var node2 = {};
+      node2.key = node.key + 1;
+      node2.n = "Chưa xác định";
+      node2.s = "F";
+      node2.f = "";
+      node2.m = "";
+      node2.ux = "";
+      node2.vir = node.key;
+      node2.a = ["L"]; // Là array
+      node2.bio = "";
+      node2.createdAt = new Date();
+
+      node.n = node.key;
+      node2.n = node2.key;
+      createNodeParents(node, node2, getData);
+    } else if (dataType === "5") {
+      // Handle view/edit/delete
+      // Handle bằng Modal riêng
+      // console.log("data", data);
+      setShow(true);
+    }
   };
 
   return (
     <div>
       <ul id="contextMenu" className="menu">
-        <li id="cut" className="menu-item">
-          <Button id="add-children" variant="primary" data-key="key1" data-name="name1" className="btn form-control" onClick={handleShow}>
-            Thêm Người Con
+        <li id="add-son" className="menu-item">
+          <Button id="btn-add-data1" variant="primary" data-type="1" data-key="key1" className="btn form-control" onClick={handleShow}>
+            Thêm Con Trai
           </Button>
         </li>
-        <li id="copy" className="menu-item">
-          <Button id="add-marriage" variant="primary" className="btn form-control" onClick={handleShow}>
+        <li id="add-daughter" className="menu-item">
+          <Button id="btn-add-data2" variant="primary" data-type="2" data-key="key1" className="btn form-control" onClick={handleShow}>
+            Thêm Con Gái
+          </Button>
+        </li>
+        <li id="add-wife" className="menu-item">
+          <Button id="btn-add-data3" variant="primary" data-type="3" data-key="key1" className="btn form-control" onClick={handleShow}>
             Thêm Vợ/Chồng
           </Button>
         </li>
-        <li id="paste" className="menu-item">
-          <Button id="add-marriage" variant="primary" className="btn form-control" onClick={handleShow}>
+        <li id="add-parent" className="menu-item">
+          <Button id="btn-add-data4" variant="primary" data-type="4" data-key="key1" className="btn form-control" onClick={handleShow}>
             Thêm Cha/Mẹ
           </Button>
         </li>
-        <li id="delete" className="menu-item">
-          <Button id="add-marriage" variant="primary" className="btn form-control" onClick={handleShow}>
+        <li id="edit-delete" className="menu-item">
+          <Button id="btn-add-data5" variant="primary" data-type="5" data-key="key1" className="btn form-control" onClick={handleShow}>
             Xem/Sửa/Xóa
           </Button>
         </li>
       </ul>
-      ...
-      <ReactDiagram initDiagram={initDiagram} divClassName="diagram-component diagram-center" onModelChange={handleModelChange} />
-      ...
-      <Modal show={show} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>THÔNG TIN CÁ NHÂN</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
-              <Form.Label>Thông ti của node: </Form.Label>
-              <Form.Label>{data["n"]}</Form.Label>
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="exampleForm.ControlInput2">
-              <Form.Label>Họ và tên</Form.Label>
-              <Form.Control type="text" autoFocus />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="exampleForm.ControlInput3">
-              <Form.Check inline label="Đã chết" name="group1" type="radio" id="id2" />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="formBasicCheckbox">
-              <Form.Check type="checkbox" label="A" />
-              <Form.Check type="checkbox" label="B" />
-              <Form.Check type="checkbox" label="C" />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
-              <Form.Label>Mô tả</Form.Label>
-              <Form.Control as="textarea" rows={6} />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={handleClose}>
-            Save Changes
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <br />
+
+      {listNodeData?.length > 0 ? <Diagram /> : <div>Loading</div>}
+
+      {/* Call Modal */}
+      <ModalAddSon handleClose={handleClose} show={show} data={data} />
     </div>
   );
 }
