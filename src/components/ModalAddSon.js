@@ -12,8 +12,6 @@ import { db } from "../database/firebaseConfig";
 import { async } from "@firebase/util";
 
 const ModalAddSon = ({ handleClose, show, data }) => {
-  const [newId, setNewId] = useState();
-
   const {
     register,
     getValues,
@@ -23,29 +21,35 @@ const ModalAddSon = ({ handleClose, show, data }) => {
 
   const createSon = async (son) => {
     console.log("addSon", son);
+    // const item = {};
+    // item.key = newId;
+    // item.n = getValues("n");
+    // item.s = getValues("s");
+    // item.f = getValues("f");
+    // item.m = getValues("m");
+    // item.ux = newId;
+    // item.vir = newId;
+    // item.a = [];
+    // item.bio = [];
+    // console.log("item", item);
 
-    console.log("newId", newId);
-    const item = [];
-    item["id"] = newId;
-    item["key"] = newId;
-    item["n"] = getValues("n");
-    item["s"] = getValues("s");
-    item["f"] = getValues("f");
-    item["m"] = getValues("m");
-    item["ux"] = newId;
-    item["vir"] = newId;
-    item["a"] = [];
-    console.log("item", item);
     // await addDoc(usersCollection, { ...son });
+    // Update thông tin node
+    if (getValues("n")) {
+      const currentNode = doc(db, "biography", String(data.key));
+      await updateDoc(currentNode, {
+        n: getValues("n"),
+      })
+        .then(() => {
+          console.log("Cập nhật thông tin thành công", data.key);
+        })
+        .catch((error) => {
+          console.log("updateDoc.error", error);
+        });
+    } else {
+      // Đưa ra thông báo ở đây
+    }
   };
-
-  useEffect(() => {
-    const col = collection(db, "biography");
-    const q = query(col);
-    onSnapshot(q, (querySnapshot) => {
-      setNewId(querySnapshot.size);
-    });
-  });
 
   return (
     <Modal show={show} onHide={handleClose}>
@@ -55,30 +59,23 @@ const ModalAddSon = ({ handleClose, show, data }) => {
           <Modal.Title>THÔNG TIN CÁ NHÂN</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form.Group className="mb-3" id="exampleForm.ControlInput1">
-            <Form.Label>Tên của node: </Form.Label>
-            <Form.Label>
-              {data["n"]} <span>({data["s"] === "M" ? "Nam" : "Nữ"})</span>
-            </Form.Label>
-          </Form.Group>
-          <Form.Group className="mb-3" id="exampleForm.ControlInput1">
-            <Form.Label>Giới tính: </Form.Label>
-            <Form.Label>{data["s"] === "M" ? "Nam" : "Nữ"}</Form.Label>
-          </Form.Group>
-          <Form.Group className="mb-3" id="exampleForm.ControlInput1">
-            <Form.Label>key: </Form.Label>
+          <Form.Group className="mb-3" id="key-form">
+            <Form.Label>Mã cá nhân:&nbsp;</Form.Label>
             <Form.Label>{data["key"]}</Form.Label>
           </Form.Group>
-          <Form.Group className="mb-3" id="exampleForm.ControlInput1">
-            <Form.Label>{data["s"] === "M" ? `key của vợ là: ${data["ux"]}` : `key của chồng là: ${data["vir"]}`} </Form.Label>
-            <Form.Label>{data["m"]}</Form.Label>
-          </Form.Group>
-
           <FloatingLabel id="fullName" label="Họ và tên" className="mb-3">
-            <Form.Control as="textarea" id="fullName" {...register("n", { required: true })} value={data["n"]} />
+            <Form.Control as="textarea" id="fullName" {...register("n", { required: true })} defaultValue={data["n"]} />
             <Form.Text className="text-muted">{errors.n?.type === "required" && "Bắt buộc nhập họ và tên"}</Form.Text>
           </FloatingLabel>
-          <Row>
+          <Form.Group className="mb-3" id="bio-form">
+            <Form.Label>Mô tả</Form.Label>
+            <Form.Control as="textarea" id="bio" rows={6} {...register("bio")} />
+          </Form.Group>
+          {/* <Form.Group className="mb-3" id="exampleForm.ControlInput1">
+            <Form.Label>{data["s"] === "M" ? `key của vợ là: ${data["ux"]}` : `key của chồng là: ${data["vir"]}`} </Form.Label>
+            <Form.Label>{data["m"]}</Form.Label>
+          </Form.Group> */}
+          {/* <Row>
             <Form.Label column lg={5}>
               Key của bản thân
             </Form.Label>
@@ -86,9 +83,8 @@ const ModalAddSon = ({ handleClose, show, data }) => {
               <Form.Control type="number" id="key" {...register("key", { required: true })} placeholder="Nhập key của bản thân" />
               <Form.Text className="text-muted">{errors.key?.type === "required" && "Bắt buộc nhập Key của bản thân"}</Form.Text>
             </Col>
-          </Row>
-          <br />
-          <Row>
+          </Row> */}
+          {/* <Row>
             <Form.Label column lg={5}>
               Key của bố
             </Form.Label>
@@ -96,9 +92,8 @@ const ModalAddSon = ({ handleClose, show, data }) => {
               <Form.Control type="number" id="keyFather" {...register("f", { required: true })} />
               <Form.Text className="text-muted">{errors.key?.type === "required" && "Bắt buộc nhập Key của bố"}</Form.Text>
             </Col>
-          </Row>
-          <br />
-          <Row>
+          </Row> */}
+          {/* <Row>
             <Form.Label column lg={5}>
               Key của mẹ
             </Form.Label>
@@ -107,8 +102,8 @@ const ModalAddSon = ({ handleClose, show, data }) => {
               <Form.Text className="text-muted">{errors.key?.type === "required" && "Bắt buộc nhập Key của mẹ"}</Form.Text>
             </Col>
           </Row>
-          <br />
-          <Row>
+          <br /> */}
+          {/* <Row>
             <Form.Label column lg={5}>
               Giới tính
             </Form.Label>
@@ -116,8 +111,7 @@ const ModalAddSon = ({ handleClose, show, data }) => {
               <Form.Control type="number" id="sex" {...register("s", { required: true })} />
               <Form.Text className="text-muted">{errors.key?.type === "required" && "Bắt buộc nhập giới tính"}</Form.Text>
             </Col>
-          </Row>
-
+          </Row> */}
           {/* <div>
               <label for="fullName">Họ và tên:</label>
               <br></br>

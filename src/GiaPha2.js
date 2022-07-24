@@ -144,7 +144,7 @@ function GiaPha2() {
             console.log("Cập nhật ux thành công", getData.key);
           })
           .catch((error) => {
-            console.log("setDoc.error", error);
+            console.log("updateDoc.error", error);
           });
       }
     } else if (getData.s === "F") {
@@ -162,7 +162,7 @@ function GiaPha2() {
             console.log("Cập nhật vir thành công", getData.key);
           })
           .catch((error) => {
-            console.log("setDoc.error", error);
+            console.log("updateDoc.error", error);
           });
       }
     }
