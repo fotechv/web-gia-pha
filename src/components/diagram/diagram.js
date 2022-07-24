@@ -291,23 +291,23 @@ const Diagram = () => {
         dataObj.setAttribute("data-key", obj.data.key);
         dataObj.setAttribute("data-name", obj.data.n);
         dataObj.setAttribute("data-sex", obj.data.s);
-        dataObj.setAttribute("data-mother", obj.data.m);
         dataObj.setAttribute("data-father", obj.data.f);
+        dataObj.setAttribute("data-mother", obj.data.m);
         dataObj.setAttribute("data-wife", obj.data.ux);
         dataObj.setAttribute("data-husband", obj.data.vir);
         dataObj.setAttribute("data-attributes", obj.data.a);
       }
 
-      var getData = [];
-      getData["key"] = obj.data.key;
-      getData["n"] = obj.data.n;
-      getData["s"] = obj.data.s;
-      getData["m"] = obj.data.m;
-      getData["f"] = obj.data.f;
-      getData["ux"] = obj.data.ux;
-      getData["vir"] = obj.data.vir;
-      getData["a"] = obj.data.a;
-      getData["bio"] = obj.data.bio;
+      var getData = {};
+      getData.key = obj.data.key;
+      getData.n = obj.data.n;
+      getData.s = obj.data.s;
+      getData.m = obj.data.m;
+      getData.f = obj.data.f;
+      getData.ux = obj.data.ux;
+      getData.vir = obj.data.vir;
+      getData.a = obj.data.a;
+      getData.bio = obj.data.bio;
 
       console.log("Data node", getData);
 
