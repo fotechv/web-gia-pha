@@ -7,7 +7,7 @@ import FloatingLabel from "react-bootstrap/FloatingLabel";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 
-import { collection, query, onSnapshot, getDocs, addDoc, updateDoc, deleteDoc, doc, getFirestore } from "firebase/firestore";
+import { collection, query, onSnapshot, getDocs, addDoc, getDoc, setDoc, updateDoc, deleteDoc, doc, getFirestore } from "firebase/firestore";
 import { db } from "../database/firebaseConfig";
 import { async } from "@firebase/util";
 
@@ -19,8 +19,8 @@ const ModalAddSon = ({ handleClose, show, data }) => {
     handleSubmit,
   } = useForm();
 
-  const createSon = async (son) => {
-    console.log("addSon", son);
+  const updateDocNode = async (dataForm) => {
+    console.log("dataForm", dataForm);
     // const item = {};
     // item.key = newId;
     // item.n = getValues("n");
@@ -51,10 +51,41 @@ const ModalAddSon = ({ handleClose, show, data }) => {
     }
   };
 
+  const deleteNode = async () => {
+    const docCurId = String(data.key);
+    const dataBak = await getDoc(doc(db, "biography", docCurId));
+    console.log("dataBak", dataBak);
+    if (dataBak.exists()) {
+      console.log("Document data:", dataBak.data());
+      // Backup trước khi xóa
+      const docBak = doc(db, "biography_backup", docCurId);
+      await setDoc(docBak, dataBak.data())
+        .then(() => {
+          console.log("Backup thành công", docBak.id);
+        })
+        .catch((error) => {
+          console.log("setDoc.error", error);
+        });
+
+      // XÓA node
+      await deleteDoc(doc(db, "biography", docCurId))
+        .then(() => {
+          console.log("Xóa node thành công", docCurId);
+        })
+        .catch((error) => {
+          console.log("deleteDoc.error", error);
+        });
+    } else {
+      // doc.data() will be undefined in this case
+      console.log("No such document!");
+    }
+  };
+
   return (
     <Modal show={show} onHide={handleClose}>
       {/* <form onSubmit={handleSubmit(createSon)}> */}
-      <Form onSubmit={handleSubmit(createSon)}>
+      <Form onSubmit={handleSubmit(updateDocNode)}>
+        {/* <Form onSubmit={handleSubmit(deleteNode)}> */}
         <Modal.Header closeButton>
           <Modal.Title>THÔNG TIN CÁ NHÂN</Modal.Title>
         </Modal.Header>
@@ -157,10 +188,21 @@ const ModalAddSon = ({ handleClose, show, data }) => {
             variant="primary"
             onClick={() => {
               handleClose();
-              createSon();
+              updateDocNode();
             }}
           >
             Save Changes
+          </Button>
+          <Button
+            className="btn btn-danger"
+            type="submit"
+            variant="primary"
+            onClick={() => {
+              handleClose();
+              deleteNode();
+            }}
+          >
+            Xóa người này
           </Button>
         </Modal.Footer>
       </Form>
