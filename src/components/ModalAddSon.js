@@ -75,7 +75,7 @@ const ModalAddSon = ({ handleClose, show, data }) => {
           </Form.Group>
 
           <FloatingLabel id="fullName" label="Họ và tên" className="mb-3">
-            <Form.Control as="textarea" id="fullName" {...register("n", { required: true })}></Form.Control>
+            <Form.Control as="textarea" id="fullName" {...register("n", { required: true })} value={data["n"]} />
             <Form.Text className="text-muted">{errors.n?.type === "required" && "Bắt buộc nhập họ và tên"}</Form.Text>
           </FloatingLabel>
           <Row>

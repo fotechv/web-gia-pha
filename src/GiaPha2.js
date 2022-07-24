@@ -41,11 +41,12 @@ function GiaPha2() {
   const changeListNodeData = store((state) => state.changeListNodeData);
   const usersCollection = collection(db, "biography");
 
-  const onSubmit = (data1) => console.log("GiaPha2.data1", data1);
+  // const onSubmit = (data1) => console.log("GiaPha2.data1", data1);
 
   useEffect(() => {
     const getUsers = async () => {
-      const data = await getDocs(usersCollection);
+      // const data = await getDocs(usersCollection);
+      const data = await getDocs(query(usersCollection, orderBy("createdAt")));
       setGetDataFireStore(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
     };
 
@@ -138,8 +139,8 @@ function GiaPha2() {
         // Chưa có vợ => Update lại ux
         const currentNode = doc(db, "biography", getData.key);
         await updateDoc(currentNode, {
-          a: ["L"],
-          ux: docRef.id,
+          a: ["B"],
+          ux: parseInt(docRef.id),
         })
           .then(() => {
             console.log("Cập nhật ux thành công", getData.key);
@@ -156,8 +157,8 @@ function GiaPha2() {
         // Chưa có Chồng => Update lại vir
         const currentNode = doc(db, "biography", getData.key);
         await updateDoc(currentNode, {
-          a: ["L"],
-          vir: docRef.id,
+          a: ["I"],
+          vir: parseInt(docRef.id),
         })
           .then(() => {
             console.log("Cập nhật vir thành công", getData.key);
@@ -195,8 +196,8 @@ function GiaPha2() {
     //CẬP NHẬT LẠI THÔNG TIN BỐ MẸ CHO NODE HIỆN TẠI
     const currentNode = doc(db, "biography", getData.key);
     await updateDoc(currentNode, {
-      f: docRef1.id,
-      m: docRef2.id,
+      f: parseInt(docRef1.id),
+      m: parseInt(docRef2.id),
     }).then(() => {
       console.log("Cập nhật f,m thành công cho node", getData.key);
     });
@@ -246,18 +247,18 @@ function GiaPha2() {
       node.s = "M"; //sex=Male
       if (getData.s === "M") {
         // Người chọn là BỐ
-        node.f = getData.key;
+        node.f = parseInt(getData.key);
         if (getData.ux) {
-          node.m = getData.ux; //lấy giá trị m(Mẹ) là ux(vợ) của Bố
+          node.m = parseInt(getData.ux); //lấy giá trị m(Mẹ) là ux(vợ) của Bố
         } else {
           // Đưa ra thông báo cần thêm chồng
           // Case này không cần handle, vì không có chồng/vợ, menu này không hiện
         }
       } else if (getData.s === "F") {
         // Người chọn là MẸ
-        node.m = getData.key;
+        node.m = parseInt(getData.key);
         if (getData.vir) {
-          node.f = getData.vir; //lấy giá trị f(Bố) là vir(chồng) của mẹ
+          node.f = parseInt(getData.vir); //lấy giá trị f(Bố) là vir(chồng) của mẹ
         } else {
           // Đưa ra thông báo cần thêm chồng
           // Case này không cần handle, vì không có chồng/vợ, menu này không hiện
@@ -271,15 +272,15 @@ function GiaPha2() {
       node.s = "F"; //sex = Female
       if (getData.s === "M") {
         // Người chọn là BỐ
-        node.f = getData.key;
+        node.f = parseInt(getData.key);
         if (getData.ux) {
-          node.m = getData.ux; //lấy giá trị m(Mẹ) là ux(vợ) của Bố
+          node.m = parseInt(getData.ux); //lấy giá trị m(Mẹ) là ux(vợ) của Bố
         }
       } else if (getData.s === "F") {
         // Người chọn là MẸ
-        node.m = getData.key;
+        node.m = parseInt(getData.key);
         if (getData.vir) {
-          node.f = getData.vir; //lấy giá trị f(Bố) là vir(chồng) của mẹ
+          node.f = parseInt(getData.vir); //lấy giá trị f(Bố) là vir(chồng) của mẹ
         }
       }
 
@@ -290,13 +291,13 @@ function GiaPha2() {
       if (getData.s === "M") {
         // Thêm vợ ==> Node đang chọn là Male
         node.s = "F";
-        node.a = ["L"]; // Đánh dấu là vợ
-        node.vir = getData.key; //key của Chồng
+        node.a = ["I"]; // Đánh dấu là vợ
+        node.vir = parseInt(getData.key); //key của Chồng
       } else if (getData.s === "F") {
         // Thêm chồng ==> Node đang chọn là Female
         node.s = "M";
-        node.a = ["L"]; // Đánh dấu là chồng
-        node.ux = getData.key;
+        node.a = ["B"]; // Đánh dấu là chồng
+        node.ux = parseInt(getData.key);
       }
 
       node.n = node.key; //Tạm lưu tên là key cho dễ dev
@@ -305,19 +306,19 @@ function GiaPha2() {
       // THÊM BỐ/MẸ => Thêm đồng thời 2 node
       // node BỐ
       node.s = "M";
-      node.a = ["L"];
-      node.ux = node.key + 1;
+      node.a = ["B"];
+      node.ux = parseInt(node.key) + 1;
 
       // Node MẸ
       var node2 = {};
-      node2.key = node.key + 1;
+      node2.key = parseInt(node.key) + 1;
       node2.n = "Chưa xác định";
       node2.s = "F";
       node2.f = "";
       node2.m = "";
       node2.ux = "";
-      node2.vir = node.key;
-      node2.a = ["L"]; // Là array
+      node2.vir = parseInt(node.key);
+      node2.a = ["I"]; // Là array
       node2.bio = "";
       node2.createdAt = new Date();
 
